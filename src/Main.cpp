@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "VideoFile.hpp"
+#include "Decoder.hpp"
 
 int main(int argc, char **argv) {
 	try {
@@ -9,6 +10,7 @@ int main(int argc, char **argv) {
 		avcodec_register_all();
 
 		VideoFile file(argv[1]);
+		Decoder decoder(file);
 
 		for( int i = 0; ; i++ ) {
 			RawFrame *frame = file.fetchRawFrame();
@@ -16,6 +18,8 @@ int main(int argc, char **argv) {
 				std::cout << "Found a frame for which libav fails to identify position\n";
 				return 1;
 			}
+			Bitmap *bmp = decoder.decode(frame);
+			if(bmp) delete bmp;
 			printf( "%i %li\n", i, frame->getPos() );
 			delete frame;
 		}

@@ -5,6 +5,7 @@ extern "C" {
     #define __STDC_CONSTANT_MACROS
     #include <libavformat/avformat.h>
     #include <libavcodec/avcodec.h>
+    #include <libavutil/imgutils.h>
 }
 
 #include <string>

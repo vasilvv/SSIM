@@ -4,7 +4,11 @@
 #include "libav.hpp"
 #include "RawFrame.hpp"
 
+class Decoder;
+
 class VideoFile {
+	friend class Decoder;
+
 	public:
 		VideoFile(const char *filename);
 		~VideoFile();

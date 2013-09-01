@@ -4,9 +4,11 @@
 #include "libav.hpp"
 
 class VideoFile;
+class Decoder;
 
 class RawFrame {
     friend class VideoFile;
+    friend class Decoder;
 
 	public:
         ~RawFrame();
