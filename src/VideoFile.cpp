@@ -17,7 +17,7 @@ VideoFile::VideoFile(const char *filename) {
 		}
 	}
 	if( vstream == -1 ) {
-		throw "No VP8 stream found";
+		throw "No H.264 stream found";
 	}
 }
 

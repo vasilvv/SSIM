@@ -7,6 +7,8 @@ class Bitmap {
 	public:
 		Bitmap(AVFrame *frame);
 		~Bitmap();
+
+		double SSIM(Bitmap &other);
 	private:
 		AVPicture picture;
 		PixelFormat pix_fmt;
