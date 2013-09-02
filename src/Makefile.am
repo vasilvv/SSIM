@@ -1,0 +1,4 @@
+bin_PROGRAMS = ssim
+ssim_SOURCES = Bitmap.cpp Decoder.cpp Main.cpp RawFrame.cpp VideoFile.cpp
+ssim_CFLAGS = @LIBAVUTIL_CFLAGS@ @LIBAVCODEC_CFLAGS@ @LIBAVFORMAT_CFLAGS@ 
+ssim_LDADD = @LIBAVUTIL_LIBS@ @LIBAVCODEC_LIBS@ @LIBAVFORMAT_LIBS@ 
