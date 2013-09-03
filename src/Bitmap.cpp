@@ -14,10 +14,45 @@ Bitmap::Bitmap(AVFrame *frame) {
 	av_image_copy(picture.data, picture.linesize, const_cast<const uint8_t**>(frame->data), frame->linesize, pix_fmt, width, height);
 }
 
+Bitmap::Bitmap(int width, int height, PixelFormat pix_fmt) {
+	if( pix_fmt != PIX_FMT_YUV420P ) {
+		throw "Formats other than YUV 4:2:0 are not supported";
+	}
+
+	this->width = width;
+	this->height = height;
+	this->pix_fmt = pix_fmt;
+
+	avpicture_alloc(&picture, pix_fmt, width, height);
+}
+
 Bitmap::~Bitmap() {
 	avpicture_free(&picture);
 }
 
+Bitmap* Bitmap::scale(int new_width, int new_height) {
+	Bitmap *result = new Bitmap(new_width, new_height, pix_fmt);
+	struct SwsContext *context;
+
+	if( new_width % 2 != 0 || new_height % 2 != 0 ) {
+		throw "Dimensions of the image must be even";
+	}
+
+	result->picture.linesize[0] = new_width;
+	result->picture.linesize[1] = new_width / 2;
+	result->picture.linesize[2] = new_width / 2;
+
+	context = sws_getCachedContext(NULL, width, height, pix_fmt,
+	                                     new_width, new_height, pix_fmt,
+	                                     SWS_BICUBIC, NULL, NULL, NULL);
+	sws_scale(context, picture.data, picture.linesize, 0, height,
+	                           result->picture.data, result->picture.linesize);
+	sws_freeContext(context);
+
+	return result;
+}
+
+/*  Window sizes  */
 #define WS 8
 #define WS2 64
 

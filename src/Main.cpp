@@ -5,7 +5,6 @@
 
 int main(int argc, char **argv) {
 	try {
-		int error;
 		av_register_all();
 		avcodec_register_all();
 
@@ -23,8 +22,8 @@ int main(int argc, char **argv) {
 				std::cout << "Found a frame for which libav fails to identify position\n";
 				return 1;
 			}
-			Frame *bmp1 = decoder1.decode(frame1);
-			Frame *bmp2 = decoder2.decode(frame2);
+			Bitmap *bmp1 = decoder1.decode(frame1);
+			Bitmap *bmp2 = decoder2.decode(frame2);
 			for(;;) {
 				if( !bmp1 && !bmp2 ) {
 					frame1 = file1.fetchRawFrame();
@@ -43,12 +42,15 @@ int main(int argc, char **argv) {
 				}
 			}
 			printf( "%i %li\n", i, frame1->getPos() );
-			if( bmp1 && bmp2 ) {
-				ssim += bmp1->SSIM(*bmp2);
-				printf( "SSIM: %.05f\n", ssim / frame_no );
-				delete bmp1;
+			if( !bmp1->hasSameDimensions(*bmp2) ) {
+				Bitmap *bmp3 = bmp2->scale(bmp1->getWidth(), bmp1->getHeight());
 				delete bmp2;
+				bmp2 = bmp3;
 			}
+			ssim += bmp1->SSIM(*bmp2);
+			printf( "SSIM: %.05f\n", ssim / frame_no );
+			delete bmp1;
+			delete bmp2;
 			delete frame1;
 			delete frame2;
 		}
