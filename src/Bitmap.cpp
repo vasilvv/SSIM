@@ -18,16 +18,6 @@ Bitmap::~Bitmap() {
 #define WS 8
 #define WS2 64
 
-inline static double window_average(uint8_t data[], int linesize, int w_i, int w_j){
-	uint32_t avg = 0;
-	for( int i = 0; i < WS; i++ ) {
-		for( int j = 0; j < WS; j++ ) {
-			avg += data[linesize*(w_i*WS + i) + w_j*WS + i];
-		}
-	}
-	return (double)(avg) / WS2;
-}
-
 double Bitmap::SSIM(Bitmap &other) {
 	// FIXME: this should be resized
 	if( width != other.width || height != other.height ) {
