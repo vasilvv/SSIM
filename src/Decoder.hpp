@@ -8,7 +8,7 @@ class Decoder {
 	public:
 		Decoder(VideoFile &file);
 
-		Frame *decode(RawFrame *input);
+		std::unique_ptr<Frame> decode(RawFrame *input);
 
 	private:
 		AVCodecContext *ctx;

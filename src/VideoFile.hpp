@@ -4,6 +4,8 @@
 #include "libav.hpp"
 #include "RawFrame.hpp"
 
+#include <memory>
+
 class Decoder;
 
 class VideoFile {
@@ -13,7 +15,7 @@ class VideoFile {
 		VideoFile(const char *filename);
 		~VideoFile();
 
-		RawFrame *fetchRawFrame();
+		std::unique_ptr<RawFrame> fetchRawFrame();
 
 	private:
 		AVFormatContext *ctx;

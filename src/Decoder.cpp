@@ -13,7 +13,7 @@ Decoder::Decoder(VideoFile &file) {
 	}
 }
 
-Frame *Decoder::decode(RawFrame *input) {
+std::unique_ptr<Frame> Decoder::decode(RawFrame *input) {
 	AVFrame *frame = avcodec_alloc_frame();
 	int got_picture;
 	int error;
@@ -25,8 +25,8 @@ Frame *Decoder::decode(RawFrame *input) {
 
 	if( !got_picture ) {
 		av_free(frame);
-		return NULL;
+		return nullptr;
 	}
 
-	return new Frame(frame);
+	return std::unique_ptr<Frame>( new Frame(frame) );
 }

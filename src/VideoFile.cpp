@@ -27,9 +27,9 @@ VideoFile::~VideoFile() {
 	}
 }
 
-RawFrame* VideoFile::fetchRawFrame() {
+std::unique_ptr<RawFrame> VideoFile::fetchRawFrame() {
 	int error;
-	RawFrame *frame = new RawFrame();
+	std::unique_ptr<RawFrame> frame{ new RawFrame() };
 
 	for(;;) {
 		error = av_read_frame(ctx, &frame->packet);
