@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 					break;
 				}
 			}
-			printf( "%i %li\n", i, frame1->getPos() );
+			printf( "%i %li\n", frame_no, frame1->getPos() );
 			if( !bmp1->hasSameDimensions(*bmp2) ) {
 				Bitmap *bmp3 = bmp2->scale(bmp1->getWidth(), bmp1->getHeight());
 				delete bmp2;

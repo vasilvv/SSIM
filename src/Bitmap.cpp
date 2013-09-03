@@ -1,6 +1,8 @@
 #include "Bitmap.hpp"
 
 #include <zlib.h>
+#include <iostream>
+#include <fstream>
 
 Bitmap::Bitmap(AVFrame *frame) {
 	pix_fmt = static_cast<PixelFormat>(frame->format);
@@ -114,4 +116,22 @@ uint32_t Bitmap::CRC32(bool include_chroma) {
 	}
 
 	return crc;
+}
+
+void Bitmap::dumpPGM(const char *filename) {
+	std::ofstream file(filename);
+
+	file << "P5\n";
+	file << width << " " << height << "\n";
+	file << "255\n";
+
+	int linesize = picture.linesize[0];
+	for( int i = 0; i < height; i++ ) {
+		for( int j = 0; j < width; j++ ) {
+			file << (int)picture.data[0][linesize*i + j];
+			file << ((j == width - 1) ? "\n" : " ");
+		}
+	}
+
+	file.close();
 }

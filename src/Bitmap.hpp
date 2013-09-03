@@ -13,6 +13,8 @@ class Bitmap {
 		double SSIM(Bitmap &other);
 		uint32_t CRC32(bool include_chroma);
 
+		void dumpPGM(const char *filename);
+
 		inline int getWidth() { return width; }
 		inline int getHeight() { return height; }
 		inline int hasSameDimensions(Bitmap &bmp2) {
