@@ -4,6 +4,9 @@
 
 Bitmap::Bitmap(AVFrame *frame) {
 	pix_fmt = static_cast<PixelFormat>(frame->format);
+	if( pix_fmt != PIX_FMT_YUV420P ) {
+		throw "Formats other than YUV 4:2:0 are not supported";
+	}
 	width = frame->width;
 	height = frame->height;
 
