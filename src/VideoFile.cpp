@@ -34,7 +34,11 @@ std::unique_ptr<RawFrame> VideoFile::fetchRawFrame() {
 	for(;;) {
 		error = av_read_frame(ctx, &frame->packet);
 		if( error < 0 ) {
-				throw LibavError(error);
+				if( error == AVERROR_EOF ) {
+					return nullptr;
+				} else {
+					throw LibavError(error);
+				}
 		}
 		if( frame->packet.stream_index == vstream ) {
 			break;
@@ -45,3 +49,4 @@ std::unique_ptr<RawFrame> VideoFile::fetchRawFrame() {
 
 	return frame;
 }
+

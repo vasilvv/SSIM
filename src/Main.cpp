@@ -1,61 +1,88 @@
 #include <iostream>
+#include <cstdlib>
 
 #include "VideoFile.hpp"
 #include "Decoder.hpp"
 
+
+void check_frame(RawFrame *frame) {
+	// End of file
+	if( !frame ) {
+		exit(0);
+	}
+
+	if( frame->getPos() < 0 ) {
+		std::cerr << "Found a frame for which libav fails to identify position\n";
+		exit(1);
+	}
+}
+
 int main(int argc, char **argv) {
 	try {
+		if( argc < 3 ) {
+			std::cerr << "Syntax: ssim orig_file.mkv stream_file.mp4\n";
+			return 1;
+		}
+
 		av_register_all();
 		avcodec_register_all();
 
-		VideoFile file1(argv[1]);
-		VideoFile file2(argv[2]);
-		Decoder decoder1(file1);
-		Decoder decoder2(file2);
+		VideoFile file_orig(argv[1]);
+		VideoFile file_transformed(argv[2]);
+		Decoder decoder_orig(file_orig);
+		Decoder decoder_transformed(file_transformed);
 
-		double ssim = 0;
 		int frame_no = 0;
 		for( int i = 0; ; i++ ) {
-			std::unique_ptr<RawFrame> frame1 = file1.fetchRawFrame();
-			std::unique_ptr<RawFrame> frame2 = file2.fetchRawFrame();
-			if( frame1->getPos() == -1 || frame2->getPos() == -1 ) {
-				std::cout << "Found a frame for which libav fails to identify position\n";
-				return 1;
-			}
-			std::unique_ptr<Bitmap> bmp1 = decoder1.decode(frame1.get());
-			std::unique_ptr<Bitmap> bmp2 = decoder2.decode(frame2.get());
+			std::unique_ptr<RawFrame> frame_orig = file_orig.fetchRawFrame();
+			std::unique_ptr<RawFrame> frame_transformed = file_transformed.fetchRawFrame();
+
+			check_frame(frame_orig.get());
+			check_frame(frame_transformed.get());
+
+			std::unique_ptr<Bitmap> bmp_orig = decoder_orig.decode(frame_orig.get());
+			std::unique_ptr<Bitmap> bmp_transformed = decoder_transformed.decode(frame_transformed.get());
 			for(;;) {
-				if( !bmp1 && !bmp2 ) {
-					frame1 = file1.fetchRawFrame();
-					frame2 = file2.fetchRawFrame();
-					bmp1 = decoder1.decode(frame1.get());
-					bmp2 = decoder2.decode(frame2.get());
-				} else if( bmp1 && !bmp2 ) {
-					frame2 = file2.fetchRawFrame();
-					bmp2 = decoder2.decode(frame2.get());
-				} else if( !bmp1 && bmp2 ) {
-					frame1 = file1.fetchRawFrame();
-					bmp1 = decoder1.decode(frame1.get());
+				if( !bmp_orig && !bmp_transformed ) {
+					frame_orig = file_orig.fetchRawFrame();
+					frame_transformed = file_transformed.fetchRawFrame();
+
+					check_frame(frame_orig.get());
+					check_frame(frame_transformed.get());
+
+					bmp_orig = decoder_orig.decode(frame_orig.get());
+					bmp_transformed = decoder_transformed.decode(frame_transformed.get());
+				} else if( bmp_orig && !bmp_transformed ) {
+					frame_transformed = file_transformed.fetchRawFrame();
+					check_frame(frame_transformed.get());
+					bmp_transformed = decoder_transformed.decode(frame_transformed.get());
+				} else if( !bmp_orig && bmp_transformed ) {
+					frame_orig = file_orig.fetchRawFrame();
+					check_frame(frame_orig.get());
+					bmp_orig = decoder_orig.decode(frame_orig.get());
 				} else {
 					frame_no += 1;
 					break;
 				}
 			}
-			printf( "%i %li\n", frame_no, frame1->getPos() );
-			if( !bmp1->hasSameDimensions(*bmp2) ) {
-				std::unique_ptr<Bitmap> bmp3{ bmp2->scale(bmp1->getWidth(), bmp1->getHeight()) };
-				bmp2.swap(bmp3);
+			if( !bmp_orig->hasSameDimensions(*bmp_transformed) ) {
+				std::unique_ptr<Bitmap> bmp3{ bmp_transformed->scale(bmp_orig->getWidth(), bmp_orig->getHeight()) };
+				bmp_transformed.swap(bmp3);
 			}
-			ssim += bmp1->SSIM(*bmp2);
-			printf( "SSIM: %.05f\n", ssim / frame_no );
+
+			double ssim = bmp_orig->SSIM(*bmp_transformed);
+			printf( "%i %li %.06f\n", frame_no, frame_transformed->getPos(), ssim );
 		}
 
 	} catch( LibavError err ) {
-		std::cout << err.getErrorMessage() << "\n";
+		std::cerr << err.getErrorMessage() << "\n";
+		return 1;
 	} catch( std::string err ) {
-		std::cout << err << "\n";
+		std::cerr << err << "\n";
+		return 1;
 	} catch( const char* err ) {
-		std::cout << err << "\n";
+		std::cerr << err << "\n";
+		return 1;
 	}
 
 	return 0;
