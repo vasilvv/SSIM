@@ -47,11 +47,13 @@ double Bitmap::SSIM(Bitmap &other) {
 	double ssim = 0;
 	for( int w_i = 0; w_i < w_height; w_i++ ) {
 		for( int w_j = 0; w_j < w_width; w_j++ ) {
+			int w_offset = linesize * w_i * WS + w_j * WS;
 			int x = 0, xx = 0, y = 0, yy = 0, xy = 0;
 			for( int i = 0; i < WS; i++ ) {
+				int l_offset = w_offset + linesize*i;
 				for( int j = 0; j < WS; j++ ) {
-					int cur_this  = data_this [linesize*(w_i*WS + i) + w_j*WS + i];
-					int cur_other = data_other[linesize*(w_i*WS + i) + w_j*WS + i];
+					int cur_this  = data_this [l_offset + j];
+					int cur_other = data_other[l_offset + j];
 					x += cur_this;
 					xx += cur_this * cur_this;
 					y += cur_other;
