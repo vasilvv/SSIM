@@ -1,6 +1,6 @@
 #include "Bitmap.hpp"
 
-#include <iostream>
+#include <zlib.h>
 
 Bitmap::Bitmap(AVFrame *frame) {
 	pix_fmt = static_cast<PixelFormat>(frame->format);
@@ -73,3 +73,15 @@ double Bitmap::SSIM(Bitmap &other) {
 	return ssim / w_height / w_width;
 }
 
+uint32_t Bitmap::CRC32(bool include_chroma) {
+	uint32_t crc = crc32(0, Z_NULL, 0);
+
+	crc = crc32(crc, picture.data[0], picture.linesize[0] * height);
+	
+	if( include_chroma ) {
+		crc = crc32(crc, picture.data[1], width * height / 4);
+		crc = crc32(crc, picture.data[2], width * height / 4);
+	}
+
+	return crc;
+}

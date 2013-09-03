@@ -9,6 +9,7 @@ class Bitmap {
 		~Bitmap();
 
 		double SSIM(Bitmap &other);
+		uint32_t CRC32(bool include_chroma);
 	private:
 		AVPicture picture;
 		PixelFormat pix_fmt;
