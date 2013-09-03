@@ -13,11 +13,10 @@ Decoder::Decoder(VideoFile &file) {
 	}
 }
 
-Bitmap *Decoder::decode(RawFrame *input) {
+Frame *Decoder::decode(RawFrame *input) {
 	AVFrame *frame = avcodec_alloc_frame();
 	int got_picture;
 	int error;
-	Bitmap *result = NULL;
 
 	error = avcodec_decode_video2(ctx, frame, &got_picture, &input->packet);
 	if( error < 0 ) {
@@ -25,11 +24,9 @@ Bitmap *Decoder::decode(RawFrame *input) {
 	}
 
 	if( !got_picture ) {
-		goto exit;
+		av_free(frame);
+		return NULL;
 	}
 
-	result = new Bitmap(frame);
-exit:
-	av_free(frame);
-	return result;
+	return new Frame(frame);
 }

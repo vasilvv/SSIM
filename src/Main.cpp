@@ -15,6 +15,7 @@ int main(int argc, char **argv) {
 		Decoder decoder2(file2);
 
 		double ssim = 0;
+		int frame_no = 0;
 		for( int i = 0; ; i++ ) {
 			RawFrame *frame1 = file1.fetchRawFrame();
 			RawFrame *frame2 = file2.fetchRawFrame();
@@ -22,12 +23,29 @@ int main(int argc, char **argv) {
 				std::cout << "Found a frame for which libav fails to identify position\n";
 				return 1;
 			}
-			Bitmap *bmp1 = decoder1.decode(frame1);
-			Bitmap *bmp2 = decoder2.decode(frame2);
+			Frame *bmp1 = decoder1.decode(frame1);
+			Frame *bmp2 = decoder2.decode(frame2);
+			for(;;) {
+				if( !bmp1 && !bmp2 ) {
+					frame1 = file1.fetchRawFrame();
+					frame2 = file2.fetchRawFrame();
+					bmp1 = decoder1.decode(frame1);
+					bmp2 = decoder2.decode(frame2);
+				} else if( bmp1 && !bmp2 ) {
+					frame2 = file2.fetchRawFrame();
+					bmp2 = decoder2.decode(frame2);
+				} else if( !bmp1 && bmp2 ) {
+					frame1 = file1.fetchRawFrame();
+					bmp1 = decoder1.decode(frame1);
+				} else {
+					frame_no += 1;
+					break;
+				}
+			}
 			printf( "%i %li\n", i, frame1->getPos() );
 			if( bmp1 && bmp2 ) {
 				ssim += bmp1->SSIM(*bmp2);
-				printf( "SSIM: %.05f\n", ssim / i );
+				printf( "SSIM: %.05f\n", ssim / frame_no );
 				delete bmp1;
 				delete bmp2;
 			}
