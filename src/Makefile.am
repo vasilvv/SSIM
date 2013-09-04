@@ -1,4 +1,5 @@
 bin_PROGRAMS = ssim
-ssim_SOURCES = Bitmap.cpp Decoder.cpp Frame.cpp Main.cpp RawFrame.cpp VideoFile.cpp
-ssim_CXXFLAGS = -std=c++11 -Wall @LIBAVUTIL_CFLAGS@ @LIBAVCODEC_CFLAGS@ @LIBAVFORMAT_CFLAGS@ @LIBSWSCALE_CFLAGS@ @ZLIB_CFLAGS@
+ssim_SOURCES = Bitmap.cpp Decoder.cpp Frame.cpp Main.cpp RawFrame.cpp VideoFile.cpp ssim.c
+ssim_CFLAGS = -std=c99
+ssim_CXXFLAGS = -std=c++11 -O0 -Wall @LIBAVUTIL_CFLAGS@ @LIBAVCODEC_CFLAGS@ @LIBAVFORMAT_CFLAGS@ @LIBSWSCALE_CFLAGS@ @ZLIB_CFLAGS@
 ssim_LDADD = @LIBAVUTIL_LIBS@ @LIBAVCODEC_LIBS@ @LIBAVFORMAT_LIBS@ @LIBSWSCALE_LIBS@ @ZLIB_LIBS@

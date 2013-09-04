@@ -17,6 +17,59 @@ void check_frame(RawFrame *frame) {
 	}
 }
 
+class Reader {
+	public:
+		Reader(char *filename);
+		// ~Reader(); -- FIXME
+		std::unique_ptr<Frame> read();
+
+		VideoFile *file = nullptr;
+		Decoder *decoder = nullptr;
+		int last_keyframe_pos = 0;
+		int skipped = 0;
+		bool eof = false;
+};
+
+Reader::Reader(char *filename) {
+	file = new VideoFile(filename);
+	decoder = new Decoder(*file);
+}
+
+std::unique_ptr<Frame> Reader::read() {
+	if( !eof ) {
+		std::unique_ptr<RawFrame> raw_frame = file->fetchRawFrame();
+		if( !raw_frame ) {
+			// End of file
+			eof = true;
+			return this->read();
+		}
+		if( raw_frame->getPos() < 0 ) {
+			std::cerr << "Found a frame for which libav fails to identify position\n";
+			exit(1);
+		}
+
+		if( raw_frame->isKeyframe() ) {
+			last_keyframe_pos = raw_frame->getPos();
+		}
+
+		std::unique_ptr<Frame> frame = decoder->decode(raw_frame.get());
+		if( frame == nullptr ) {
+			skipped++;
+			return this->read();
+		} else {
+			return frame;
+		}
+	} else {
+		if( skipped ) {
+			RawFrame raw_frame{};
+			std::unique_ptr<Frame> frame = decoder->decode(&raw_frame);
+			return frame;
+		} else {
+			return nullptr;
+		}
+	}
+}
+
 int main(int argc, char **argv) {
 	try {
 		if( argc < 3 ) {
@@ -27,51 +80,24 @@ int main(int argc, char **argv) {
 		av_register_all();
 		avcodec_register_all();
 
-		VideoFile file_orig(argv[1]);
-		VideoFile file_transformed(argv[2]);
-		Decoder decoder_orig(file_orig);
-		Decoder decoder_transformed(file_transformed);
+		Reader orig{argv[1]};
+		Reader transformed{argv[2]};
 
-		int frame_no = 0;
 		for( int i = 0; ; i++ ) {
-			std::unique_ptr<RawFrame> frame_orig = file_orig.fetchRawFrame();
-			std::unique_ptr<RawFrame> frame_transformed = file_transformed.fetchRawFrame();
+			std::unique_ptr<Bitmap> bmp_orig = orig.read();
+			std::unique_ptr<Bitmap> bmp_transformed = transformed.read();
 
-			check_frame(frame_orig.get());
-			check_frame(frame_transformed.get());
-
-			std::unique_ptr<Bitmap> bmp_orig = decoder_orig.decode(frame_orig.get());
-			std::unique_ptr<Bitmap> bmp_transformed = decoder_transformed.decode(frame_transformed.get());
-			for(;;) {
-				if( !bmp_orig && !bmp_transformed ) {
-					frame_orig = file_orig.fetchRawFrame();
-					frame_transformed = file_transformed.fetchRawFrame();
-
-					check_frame(frame_orig.get());
-					check_frame(frame_transformed.get());
-
-					bmp_orig = decoder_orig.decode(frame_orig.get());
-					bmp_transformed = decoder_transformed.decode(frame_transformed.get());
-				} else if( bmp_orig && !bmp_transformed ) {
-					frame_transformed = file_transformed.fetchRawFrame();
-					check_frame(frame_transformed.get());
-					bmp_transformed = decoder_transformed.decode(frame_transformed.get());
-				} else if( !bmp_orig && bmp_transformed ) {
-					frame_orig = file_orig.fetchRawFrame();
-					check_frame(frame_orig.get());
-					bmp_orig = decoder_orig.decode(frame_orig.get());
-				} else {
-					frame_no += 1;
-					break;
-				}
+			if( !bmp_orig && !bmp_transformed ) {
+				break;
 			}
+
 			if( !bmp_orig->hasSameDimensions(*bmp_transformed) ) {
 				std::unique_ptr<Bitmap> bmp3{ bmp_transformed->scale(bmp_orig->getWidth(), bmp_orig->getHeight()) };
 				bmp_transformed.swap(bmp3);
 			}
 
 			double ssim = bmp_orig->SSIM(*bmp_transformed);
-			printf( "%i %li %.06f\n", frame_no, frame_transformed->getPos(), ssim );
+			printf( "%i %i %.06f\n", i + 1, transformed.last_keyframe_pos, ssim );
 		}
 
 	} catch( LibavError err ) {

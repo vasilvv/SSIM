@@ -10,6 +10,7 @@ AC_CONFIG_SRCDIR([src/RawFrame.cpp])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
+AC_PROG_CC
 AC_PROG_CXX
 
 # Checks for libraries.

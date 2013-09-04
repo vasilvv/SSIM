@@ -11,6 +11,9 @@ class RawFrame {
     friend class Decoder;
 
 	public:
+		inline RawFrame() {
+			memset(&packet, 0, sizeof(AVPacket));
+		}
         ~RawFrame();
 
         inline uint8_t *getData() {
@@ -23,6 +26,10 @@ class RawFrame {
 
 		inline int64_t getPos() {
 			return packet.pos;
+		}
+
+		inline bool isKeyframe() {
+			return (packet.flags & AV_PKT_FLAG_KEY) != 0;
 		}
 
 	private:

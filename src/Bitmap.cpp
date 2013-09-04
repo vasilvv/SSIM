@@ -58,6 +58,7 @@ Bitmap* Bitmap::scale(int new_width, int new_height) {
 #define WS 8
 #define WS2 64
 
+/*
 double Bitmap::SSIM(Bitmap &other) {
 	// FIXME: this should be resized
 	if( width != other.width || height != other.height ) {
@@ -104,6 +105,7 @@ double Bitmap::SSIM(Bitmap &other) {
 
 	return ssim / w_height / w_width;
 }
+*/
 
 uint32_t Bitmap::CRC32(bool include_chroma) {
 	uint32_t crc = crc32(0, Z_NULL, 0);
@@ -135,3 +137,24 @@ void Bitmap::dumpPGM(const char *filename) {
 
 	file.close();
 }
+
+extern "C" {
+	typedef uint8_t pixel;
+	float x264_pixel_ssim_wxh( pixel *pix1, intptr_t stride1,
+							pixel *pix2, intptr_t stride2,
+							int width, int height, void *buf, int *cnt );
+}
+
+double Bitmap::SSIM(Bitmap &other) {
+	uint8_t *tmpbuf = new uint8_t[8192*1024];
+	int count;
+	double ssim;
+
+	ssim = x264_pixel_ssim_wxh(picture.data[0], picture.linesize[0],
+	                           other.picture.data[0], other.picture.linesize[0],
+	                           width, height, tmpbuf+16, &count);
+
+	delete tmpbuf;
+	return ssim/count;
+}
+
