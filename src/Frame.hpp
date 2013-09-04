@@ -11,6 +11,10 @@ class Frame : public Bitmap {
 		inline int getPresentationTimestamp() {
 			return frame->pkt_pts;
 		}
+
+		inline bool isKeyframe() {
+			return frame->key_frame;
+		}
 	protected:
 		AVFrame *frame;
 };

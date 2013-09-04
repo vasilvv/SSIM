@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include <cstdlib>
 
 #include "VideoFile.hpp"
@@ -48,10 +49,6 @@ std::unique_ptr<Frame> Reader::read() {
 			exit(1);
 		}
 
-		if( raw_frame->isKeyframe() ) {
-			last_keyframe_pos = raw_frame->getPos();
-		}
-
 		std::unique_ptr<Frame> frame = decoder->decode(raw_frame.get());
 		if( frame == nullptr ) {
 			skipped++;
@@ -97,7 +94,7 @@ int main(int argc, char **argv) {
 			}
 
 			double ssim = bmp_orig->SSIM(*bmp_transformed);
-			printf( "%i %i %.06f\n", i + 1, transformed.last_keyframe_pos, ssim );
+			printf( "%i %.06f\n", i + 1, ssim );
 		}
 
 	} catch( LibavError err ) {
