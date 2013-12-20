@@ -81,20 +81,26 @@ int main(int argc, char **argv) {
 		Reader transformed{argv[2]};
 
 		for( int i = 0; ; i++ ) {
-			std::unique_ptr<Bitmap> bmp_orig = orig.read();
-			std::unique_ptr<Bitmap> bmp_transformed = transformed.read();
+			std::unique_ptr<Frame> bmp_orig = orig.read();
+			std::unique_ptr<Frame> bmp_transformed = transformed.read();
+			std::unique_ptr<Bitmap> bmp3 = nullptr;
+			Bitmap *bmp2;
 
 			if( !bmp_orig && !bmp_transformed ) {
 				break;
 			}
 
 			if( !bmp_orig->hasSameDimensions(*bmp_transformed) ) {
-				std::unique_ptr<Bitmap> bmp3{ bmp_transformed->scale(bmp_orig->getWidth(), bmp_orig->getHeight()) };
-				bmp_transformed.swap(bmp3);
+				std::unique_ptr<Bitmap> bmp3_tmp{ bmp_transformed->scale(bmp_orig->getWidth(), bmp_orig->getHeight()) };
+				bmp3.swap(bmp3_tmp);
+				bmp2 = bmp3.get();
+			} else {
+				bmp2 = bmp_transformed.get();
 			}
 
-			double ssim = bmp_orig->SSIM(*bmp_transformed);
-			printf( "%i %.06f\n", i + 1, ssim );
+			double ssim = bmp_orig->SSIM(*bmp2);
+			printf( "%i %.06f %s %s\n", i + 1, ssim, bmp_orig->getTypeStr(), bmp_transformed->getTypeStr() );
+			std::cout.flush();
 		}
 
 	} catch( LibavError err ) {
