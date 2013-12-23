@@ -16,6 +16,10 @@ class Frame : public Bitmap {
 			return frame->key_frame;
 		}
 
+		inline int getCodedPictureNumber() {
+			return frame->coded_picture_number;
+		}
+
 		inline enum AVPictureType getType() {
 			return frame->pict_type;
 		}

@@ -23,12 +23,15 @@ class Reader {
 		Reader(char *filename);
 		// ~Reader(); -- FIXME
 		std::unique_ptr<Frame> read();
+		int64_t getFramePosition(int frameno);
 
+	private:
 		VideoFile *file = nullptr;
 		Decoder *decoder = nullptr;
 		int last_keyframe_pos = 0;
 		int skipped = 0;
 		bool eof = false;
+		std::vector<int64_t> positions;
 };
 
 Reader::Reader(char *filename) {
@@ -42,12 +45,16 @@ std::unique_ptr<Frame> Reader::read() {
 		if( !raw_frame ) {
 			// End of file
 			eof = true;
+			// Possibly get skipped frames
 			return this->read();
 		}
+
+		// Track the position of frame in file
 		if( raw_frame->getPos() < 0 ) {
 			std::cerr << "Found a frame for which libav fails to identify position\n";
 			exit(1);
 		}
+		positions.push_back( raw_frame->getPos() );
 
 		std::unique_ptr<Frame> frame = decoder->decode(raw_frame.get());
 		if( frame == nullptr ) {
@@ -58,6 +65,8 @@ std::unique_ptr<Frame> Reader::read() {
 		}
 	} else {
 		if( skipped ) {
+			// Ask libav for the remaining frames which were skipped
+			// due to frame reordering
 			RawFrame raw_frame{};
 			std::unique_ptr<Frame> frame = decoder->decode(&raw_frame);
 			return frame;
@@ -65,6 +74,10 @@ std::unique_ptr<Frame> Reader::read() {
 			return nullptr;
 		}
 	}
+}
+
+int64_t Reader::getFramePosition(int frameno) {
+	return positions.at(frameno);
 }
 
 int main(int argc, char **argv) {
@@ -86,7 +99,7 @@ int main(int argc, char **argv) {
 			std::unique_ptr<Bitmap> bmp3 = nullptr;
 			Bitmap *bmp2;
 
-			if( !bmp_orig && !bmp_transformed ) {
+			if( !bmp_orig || !bmp_transformed ) {
 				break;
 			}
 
@@ -99,7 +112,12 @@ int main(int argc, char **argv) {
 			}
 
 			double ssim = bmp_orig->SSIM(*bmp2);
-			printf( "%i %.06f %s %s\n", i + 1, ssim, bmp_orig->getTypeStr(), bmp_transformed->getTypeStr() );
+			printf( "%i %.06f %s %i %li\n",
+					i,
+					ssim,
+					bmp_transformed->getTypeStr(),
+					bmp_transformed->getCodedPictureNumber(),
+					transformed.getFramePosition(bmp_transformed->getCodedPictureNumber()) );
 			std::cout.flush();
 		}
 
