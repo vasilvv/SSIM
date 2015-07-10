@@ -11,7 +11,7 @@ VideoFile::VideoFile(const char *filename) {
 
 	vstream = -1; 
 	for( int i = 0; i < ctx->nb_streams; i++ ) {
-		if( ctx->streams[i]->codec->codec_id == CODEC_ID_H264 ) {
+		if( ctx->streams[i]->codec->codec_id == AV_CODEC_ID_H264 ) {
 			vstream = i;
 			break;
 		}

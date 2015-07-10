@@ -4,7 +4,7 @@ Decoder::Decoder(VideoFile &file) {
 	int error;
 	AVDictionary *opts = NULL;
 
-	codec = avcodec_find_decoder(CODEC_ID_H264);
+	codec = avcodec_find_decoder(AV_CODEC_ID_H264);
 	ctx = file.ctx->streams[file.vstream]->codec;
 
 	error = avcodec_open2(ctx, codec, &opts);
