@@ -36,7 +36,7 @@ class Frame : public Bitmap {
 				default:                 return "???";
 			}
 		}
-	protected:
+	
 		AVFrame *frame;
 };
 
